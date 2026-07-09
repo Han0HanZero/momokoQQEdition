@@ -1,3 +1,4 @@
 requests~=2.34.2
 websockets~=16.0
 haversine~=2.9.0
+loguru~=0.7.3

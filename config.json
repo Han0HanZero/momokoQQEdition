@@ -1,7 +1,7 @@
 {
   "app_id": "",
   "secret": "",
-  "eew_source": "wss://ws-api.wolfx.jp/cenc_eqlist",
+  "eew_source": "wss://ws-api.wolfx.jp/cenc_eew",
   "users": [
     ["A","114514",40,117],
     ["B","114514",38,116]

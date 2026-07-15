@@ -2,10 +2,6 @@
   "app_id": "",
   "secret": "",
   "eew_source": "wss://ws-api.wolfx.jp/cenc_eew",
-  "users": [
-    ["A","114514",40,117],
-    ["B","114514",38,116]
-  ],
-  "threshold_intensity": -100,
-  "target_open_id": ""
+  "threshold_intensity": 2,
+  "is_send_debug": true
 }

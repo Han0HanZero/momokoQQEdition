@@ -1,0 +1,18 @@
+{
+  "groups": [],
+  "c2c_users": [],
+  "debug_group": {
+    "openid": "",
+    "name": "DEBUG GROUP",
+    "members": [
+      {
+        "openid": "N/A",
+        "name": "N/A",
+        "location": [
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  }
+}

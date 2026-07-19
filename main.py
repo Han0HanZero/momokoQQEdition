@@ -288,6 +288,7 @@ async def get_eew(uri:str, config:dict, chat_config:dict) -> None:
                         chats = instantiate_chats(chat_config)
                         for chat in chats:  # 逐对话计算烈度
                             affected_users = []
+                            is_send = False
                             for user in chat.members:
                                 user.calc_local_intensity(eew)
                                 if user.local_intensity < config['threshold_intensity']:  # 判断是否应该发出
@@ -300,7 +301,9 @@ async def get_eew(uri:str, config:dict, chat_config:dict) -> None:
                                 response = f'⚠️即时地震信息⚠️\n{eew.origin_time}，{eew.hypo_center}发生了{str(eew.magnitude)}级地震，震源深度{str(eew.depth)}km，预估最大烈度{eew.max_intensity}。\n注意，以下群友可能受到影响：\n'
                                 sorted_affected_users = sorted(affected_users, key=lambda u: u.local_intensity, reverse=True)
                                 for user in sorted_affected_users:
-                                    response += f'{user.level} {user.name} - 预估烈度{str(round(user.local_intensity))}\n'
+                                    if user.local_intensity < 1:
+                                        user.local_intensity = 1
+                                    response += f'{user.level} {user.name} - 预估烈度{str(round(user.local_intensity,1))}\n'
                                 response += "请立即避险！\n伏地·遮挡·手抓牢"
                                 send(response, affected_users, config,'text',chat)  # 最终发送
                             else:
@@ -330,6 +333,9 @@ async def heartbeat(websocket, heartbeat_interval:int, state:dict):
             await asyncio.sleep(heartbeat_interval)
             await websocket.send(json.dumps({'op': 1, "d": state['latest_s']}))
             logger.success('成功向QQ发送心跳包')
+        except ConnectionClosedError as e:
+            #state['is_reconnect'] = True
+            logger.error(f'发送心跳包失败，服务端可能在要求resume：{repr(e)}')
         except Exception as e:
             logger.error(f'发送心跳包失败：{repr(e)}')
 
@@ -397,7 +403,7 @@ async def listen(config:dict, state:dict, chat_config:dict) -> None:
                         state['latest_s'] = ready['s']
                         session_id = ready['d']['session_id']
                         connected = True
-                        asyncio.create_task(heartbeat(websocket, heartbeat_interval, state))
+                        heartbeat_task = asyncio.create_task(heartbeat(websocket, heartbeat_interval, state))
                     else:
                         logger.critical('鉴权失败，监听启动不正确')
                         exit(-1)
@@ -410,6 +416,11 @@ async def listen(config:dict, state:dict, chat_config:dict) -> None:
                             'seq': state['latest_s']
                         }
                     }))  # 发送Resume
+                    try:
+                        heartbeat_task.cancel()
+                        await heartbeat_task
+                    except asyncio.CancelledError:
+                        heartbeat_task = asyncio.create_task(heartbeat(websocket, heartbeat_interval, state))
                 # ===== 以上为连接部分 =====
                 # ===== 事件处理 =====
                 async for event in websocket:
@@ -519,7 +530,7 @@ async def main():
     import_handlers()
     logger.info(f'注册表如下：{COMMANDS}')
     #is_send_debug = config['is_send_debug']
-    state = {'latest_s': None}
+    state = {'latest_s': None, 'is_reconnect': False}
     uri = config['eew_source']
     i = 1
     while True:

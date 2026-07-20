@@ -295,7 +295,9 @@ async def get_eew(uri:str, config:dict, chat_config:dict) -> None:
                     elif reception_dic['type'] == 'cenc_eew':
                         logger.info('从Wolfx Open API收到的包是一个EEW包。')
                         eew = Eew(reception_dic)
+                        chat_config = get_chat_config()
                         chats = instantiate_chats(chat_config)
+                        logger.info('重载了EEW的会话列表。')
                         for chat in chats:  # 逐对话计算烈度
                             affected_users = []
                             is_send = False
@@ -311,8 +313,8 @@ async def get_eew(uri:str, config:dict, chat_config:dict) -> None:
                                 response = f'⚠️即时地震信息⚠️\n{eew.origin_time}，{eew.hypo_center}发生了{str(eew.magnitude)}级地震，震源深度{str(eew.depth)}km，预估最大烈度{eew.max_intensity}。\n注意，以下群友可能受到影响：\n'
                                 sorted_affected_users = sorted(affected_users, key=lambda u: u.local_intensity, reverse=True)
                                 for user in sorted_affected_users:
-                                    if user.local_intensity < 1:
-                                        user.local_intensity = 1
+                                    if user.local_intensity < 1.0:
+                                        user.local_intensity = 1.0
                                     response += f'{user.level} {user.name} - 预估烈度{str(round(user.local_intensity,1))}\n'
                                 response += "请立即避险！\n伏地·遮挡·手抓牢"
                                 send(response, affected_users, config,'text',chat)  # 最终发送
@@ -481,7 +483,7 @@ async def listen(config:dict, state:dict, chat_config:dict) -> None:
                                             if command == 'register':
                                                 chat_config = get_chat_config()
                                                 chats = instantiate_chats(chat_config)
-                                                logger.info('由于命令关键字是register，重载了聊天列表。')
+                                                logger.info('由于命令关键字是register，重载了监听的会话列表。')
                                         except Exception as e:
                                             logger.error(f'处理命令时发生问题：{repr(e)}。')
                                             response = f'处理命令时发生问题：{repr(e)}。'

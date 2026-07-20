@@ -70,6 +70,9 @@ def register(t:str, d:dict) -> tuple[list, str]:
         if details[0] == 'user':  # 存在，准备注册成员
             if len(details) < 4:
                 return [], '缺少参数，执行/register help查看帮助。'
+            if float(details[2]) > 90.0 or float(details[2]) < -90.0 or float(details[3]) > 180.0 or float(details[3]) < -180.0:
+                return [], ('坐标不合法！纬度取值范围[-90,90]，东正西负；经度取值范围[-180,180]，北正南负。先写纬度，后写经度。\n'
+                            '参考值：北京(39.9,116.4)；承德(41.0,118.0)；衡水(37.7,115.7)')
             i_member = 0
             logger.info('准备注册成员')
             try:

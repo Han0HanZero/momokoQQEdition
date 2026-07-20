@@ -3,8 +3,6 @@ from loguru import logger
 import json
 from main import get_chat_config, instantiate_chats, Chat, GroupChat, C2CChat
 
-logger.add("./logs/handlers/register.log", rotation="1 day", retention="7 days", enqueue=True)
-
 @register_command('register')
 def register(t:str, d:dict) -> tuple[list, str]:
     content = d['content']
